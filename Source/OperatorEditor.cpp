@@ -199,7 +199,7 @@ OperatorEditor::OperatorEditor ()
 
     //[Constructor] You can add your own custom stuff here..
     SharedResourcePointer<DXLookNFeel> lookAndFeel;
-    
+
     light = lookAndFeel->imageLight;
     Image tmp = lookAndFeel->imageScaling;
 
@@ -518,6 +518,8 @@ void OperatorEditor::updateEnvPos(char pos) {
 }
 
 void OperatorEditor::mouseDown(const MouseEvent &event) {
+
+    TRACE( "paint1" );
     if ( event.mods.isRightButtonDown()  || event.mods.isAnyModifierKeyDown()) {
         PopupMenu popup;
 

@@ -38,10 +38,12 @@ class DexedAudioProcessorEditor  : public AudioProcessorEditor, public ComboBox:
     CartManager cartManager;
 
     SharedResourcePointer<DXLookNFeel> lookAndFeel;
+
+    float dpiScaleFactor;
 public:
     DexedAudioProcessor *processor;
     GlobalEditor global;
-    
+
     DexedAudioProcessorEditor (DexedAudioProcessor* ownerFilter);
     ~DexedAudioProcessorEditor();
     void timerCallback();
@@ -57,6 +59,7 @@ public:
     void cartShow();
     void parmShow();
     void discoverMidiCC(Ctrl *ctrl);
+
 };
 
 

@@ -70,13 +70,15 @@ public:
     void sliderValueChanged (Slider* sliderThatWasMoved) override;
     void buttonClicked (Button* buttonThatWasClicked) override;
 
+//    float getDesktopScaleFactor() const override { return 2.0f; };
+
 
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     DexedAudioProcessorEditor *editor;
     DexedAudioProcessor *processor;
-    
+
     Image background;
     Image imageLight;
     //[/UserVariables]

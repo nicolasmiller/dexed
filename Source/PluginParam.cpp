@@ -49,7 +49,7 @@ public:
     CtrlDXLabel(String name, int steps, int offset, StringArray &labels) : CtrlDX(name, steps, offset, 0) {
         this->labels = labels;
     };
-    
+
     String getValueDisplay() {
         return labels[getValue()];
     }
@@ -59,11 +59,11 @@ class CtrlDXTranspose : public CtrlDX {
 public:
     CtrlDXTranspose(String name, int steps, int offset) : CtrlDX(name, steps, offset, 0) {
     };
-    
+
     String getValueDisplay() {
         String ret;
         int value = getValue();
-        
+
         switch(value % 12) {
             case 0: ret << "C"; break;
             case 1: ret << "C#"; break;
@@ -86,7 +86,7 @@ class CtrlDXSwitch : public CtrlDX {
 public:
     CtrlDXSwitch(String name, int steps, int offset) : CtrlDX(name, steps, offset, 0) {
     };
-    
+
     String getValueDisplay() {
         return getValue() ? String("ON") : String("OFF");
     }
@@ -96,7 +96,7 @@ class CtrlDXOpMode : public CtrlDX {
 public:
     CtrlDXOpMode(String name, int steps, int offset) : CtrlDX(name, steps, offset, 0) {
     };
-    
+
     String getValueDisplay() {
         return getValue() ? String("FIXED") : String("RATIO");
     }
@@ -106,7 +106,7 @@ class CtrlDXBreakpoint : public CtrlDX {
 public:
     CtrlDXBreakpoint(String name, int steps, int offset) : CtrlDX(name, steps, offset, 0) {
     };
-    
+
     String getValueDisplay() {
         const char *breakNames[] = {"A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"};
         String ret;
@@ -118,29 +118,29 @@ public:
 class CtrlTune : public Ctrl {
 public:
     DexedAudioProcessor *processor;
-    
+
     CtrlTune(String name, DexedAudioProcessor *owner) : Ctrl(name) {
         processor = owner;
     }
-    
+
     float getValueHost() {
         // meh. good enough for now
         int32_t tune = processor->controllers.masterTune / (1.0/12);
         tune = (tune >> 11) + 0x2000;
         return (float)tune / 0x4000;
     }
-    
+
     void setValueHost(float v) {
         int32_t tune = (v * 0x4000) - 0x2000;
         processor->controllers.masterTune = ((float) (tune << 11)) * (1.0/12);
     }
-    
+
     String getValueDisplay() {
         String display;
         display << (getValueHost() * 2) -1;
         return display;
     }
-    
+
     void updateComponent() {
         if (slider != NULL) {
             slider->setValue(getValueHost(), dontSendNotification);
@@ -156,31 +156,31 @@ public :
         processor = owner;
         value = switchValue;
     }
-    
+
     void setValueHost(float f) {
         if ( f == 0 )
             *value = '0';
         else
             *value = '1';
         updateDisplayName();
-        
+
         // the value is based on the controller
         parent->setDxValue(155, -1);
     }
-    
+
     float getValueHost() {
         if ( *value == '0' )
             return 0;
         else
             return 1;
     }
-    
+
     String getValueDisplay() {
         String ret;
         ret << label << " " << (*value == '0' ? "OFF" : "ON");
         return ret;
     }
-    
+
     void updateComponent() {
         if (button != NULL) {
             if (*value == '0') {
@@ -190,14 +190,16 @@ public :
             }
         }
     }
-    
+
     void updateDisplayName() {
         DexedAudioProcessorEditor *editor = (DexedAudioProcessorEditor *) parent->getActiveEditor();
         if ( editor == NULL ) {
             return;
         }
         editor->global.setParamMessage(getValueDisplay());
-        editor->global.repaint();
+        TRACE( "paint1" );
+//        editor->global.lcdDisplay.repaint();
+//        editor->global.repaint();
     }
 };
 
@@ -279,6 +281,7 @@ void Ctrl::mouseEnter(const juce::MouseEvent &event) {
 }
 
 void Ctrl::mouseDown(const juce::MouseEvent &event) {
+    TRACE( "down" );
     if ( event.mods.isRightButtonDown() || event.mods.isAnyModifierKeyDown()) {
         PopupMenu popup;
 
@@ -394,7 +397,8 @@ void CtrlDX::updateDisplayName() {
     String msg;
     msg << label << " = " << getValueDisplay();
     editor->global.setParamMessage(msg);
-    editor->global.repaint();
+    TRACE( "paint2" );
+//    editor->global.repaint();
 }
 
 
@@ -444,43 +448,43 @@ void CtrlDX::updateComponent() {
 void DexedAudioProcessor::initCtrl() {
     setupStartupCart();
     currentProgram = 0;
-    
+
     fxCutoff = new CtrlFloat("Cutoff", &fx.uiCutoff);
     ctrl.add(fxCutoff);
-    
+
     fxReso = new CtrlFloat("Resonance", &fx.uiReso);
     ctrl.add(fxReso);
-    
+
     output = new CtrlFloat("Output", &fx.uiGain);
     ctrl.add(output);
-    
+
     tune = new CtrlTune("MASTER TUNE ADJ", this);
     ctrl.add(tune);
-    
+
     algo = new CtrlDX("ALGORITHM", 31, 134, 1);
     ctrl.add(algo);
-    
+
     feedback = new CtrlDX("FEEDBACK", 7, 135);
     ctrl.add(feedback);
-    
+
     oscSync = new CtrlDXSwitch("OSC KEY SYNC", 1, 136);
     ctrl.add(oscSync);
-    
+
     lfoRate = new CtrlDX("LFO SPEED", 99, 137);
     ctrl.add(lfoRate);
-    
+
     lfoDelay = new CtrlDX("LFO DELAY", 99, 138);
     ctrl.add(lfoDelay);
-    
+
     lfoPitchDepth = new CtrlDX("LFO PM DEPTH", 99, 139);
     ctrl.add(lfoPitchDepth);
-    
+
     lfoAmpDepth = new CtrlDX("LFO AM DEPTH", 99, 140);
     ctrl.add(lfoAmpDepth);
-    
+
     lfoSync = new CtrlDXSwitch("LFO KEY SYNC", 1, 141);
     ctrl.add(lfoSync);
-    
+
     StringArray lbl;
     lbl.add("TRIANGE");
     lbl.add("SAW DOWN");
@@ -488,16 +492,16 @@ void DexedAudioProcessor::initCtrl() {
     lbl.add("SQUARE");
     lbl.add("SINE");
     lbl.add("S&HOLD");
-    
+
     lfoWaveform = new CtrlDXLabel("LFO WAVE", 5, 142, lbl);
     ctrl.add(lfoWaveform);
-    
+
     transpose = new CtrlDXTranspose("MIDDLE C", 48, 144);
     ctrl.add(transpose);
-    
+
     pitchModSens = new CtrlDX("P MODE SENS.", 7, 143);
     ctrl.add(pitchModSens);
-    
+
     for (int i=0;i<4;i++) {
         String rate;
         rate << "PITCH EG RATE " << (i+1);
@@ -511,13 +515,13 @@ void DexedAudioProcessor::initCtrl() {
         pitchEgLevel[i] = new CtrlDX(level, 99, 130+i);
         ctrl.add(pitchEgLevel[i]);
     }
-    
+
     StringArray keyScaleLabels;
     keyScaleLabels.add("-LN");
     keyScaleLabels.add("-EX");
     keyScaleLabels.add("+EX");
     keyScaleLabels.add("+LN");
-    
+
     // fill operator values;
     for (int i = 0; i < 6; i++) {
         //// In the Sysex, OP6 comes first, then OP5...
@@ -526,20 +530,20 @@ void DexedAudioProcessor::initCtrl() {
         String opName;
         opName << "OP" << (opVal + 1);
 
-        for (int j = 0; j < 4; j++) {     
+        for (int j = 0; j < 4; j++) {
             String opRate;
             opRate << opName << " EG RATE " << (j + 1);
             opCtrl[opVal].egRate[j] = new CtrlDX(opRate, 99, opTarget + j);
             ctrl.add(opCtrl[opVal].egRate[j]);
         }
-    
-        for (int j = 0; j < 4; j++) {        
+
+        for (int j = 0; j < 4; j++) {
             String opLevel;
             opLevel << opName << " EG LEVEL " << (j + 1);
             opCtrl[opVal].egLevel[j] = new CtrlDX(opLevel, 99, opTarget + j + 4);
             ctrl.add(opCtrl[opVal].egLevel[j]);
         }
-    
+
         String opVol;
         opVol << opName << " OUTPUT LEVEL";
         opCtrl[opVal].level = new CtrlDX(opVol, 99, opTarget + 16);
@@ -604,13 +608,13 @@ void DexedAudioProcessor::initCtrl() {
         velModSens << opName << " KEY VELOCITY";
         opCtrl[opVal].velModSens = new CtrlDX(velModSens, 7, opTarget + 15);
         ctrl.add(opCtrl[opVal].velModSens);
-        
+
         String opSwitchLabel;
         opSwitchLabel << opName << " SWITCH";
         opCtrl[opVal].opSwitch = new CtrlOpSwitch(opSwitchLabel, (char *)&(controllers.opSwitch)+(5-i), this);
         ctrl.add(opCtrl[opVal].opSwitch);
     }
-    
+
     for (int i=0; i < ctrl.size(); i++) {
         ctrl[i]->idx = i;
         ctrl[i]->parent = this;
@@ -639,14 +643,14 @@ void DexedAudioProcessor::setDxValue(int offset, int v) {
     // MIDDLE C (transpose)
     if (offset == 144)
         panic();
-    
+
     if (!sendSysexChange)
         return;
-    
+
     uint8 msg[7] = { 0xF0, 0x43, 0x10, offset > 127, 0, (uint8) v, 0xF7 };
     msg[2] = 0x10 | sysexComm.getChl();
     msg[4] = offset & 0x7F;
-    
+
     if ( sysexComm.isOutputActive() ) {
         //TRACE("SENDING SYSEX: %.2X%.2X %.2X%.2X %.2X%.2X %.2X", msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6]);
         sysexComm.send(MidiMessage(msg,7));
@@ -669,8 +673,8 @@ float DexedAudioProcessor::getParameter(int index) {
 }
 
 void DexedAudioProcessor::setParameter(int index, float newValue) {
+    TRACE( "wtf" );
     ctrl[index]->setValueHost(newValue);
-    forceRefreshUI = true;
 }
 
 int DexedAudioProcessor::getNumPrograms() {
@@ -688,23 +692,23 @@ void DexedAudioProcessor::setCurrentProgram(int index) {
         TRACE("skipping save, storage recall to close");
         return;
     }
-    
+
     panic();
-    
+
     index = index > 31 ? 31 : index;
     currentCart.unpackProgram(data, index);
     unpackOpSwitch(0x3F);
     lfo.reset(data + 137);
     currentProgram = index;
     triggerAsyncUpdate();
-    
+
     // reset parameter display
     DexedAudioProcessorEditor *editor = (DexedAudioProcessorEditor *) getActiveEditor();
     if ( editor == NULL ) {
         return;
     }
     editor->global.setParamMessage("");
-    
+
     panic();
 }
 
@@ -729,35 +733,35 @@ void DexedAudioProcessor::loadPreference() {
     File propFile = DexedAudioProcessor::dexedAppDir.getChildFile("Dexed.xml");
     PropertiesFile::Options prefOptions;
     PropertiesFile prop(propFile, prefOptions);
-    
+
     if ( ! prop.isValidFile() ) {
         return;
     }
-    
+
     if ( prop.containsKey( String("normalizeDxVelocity") ) ) {
         normalizeDxVelocity = prop.getIntValue( String("normalizeDxVelocity") );
     }
-    
+
     if ( prop.containsKey( String("pitchRange") ) ) {
         controllers.values_[kControllerPitchRange] = prop.getIntValue( String("pitchRange") );
     }
-    
+
     if ( prop.containsKey( String("pitchStep") ) ) {
         controllers.values_[kControllerPitchStep] = prop.getIntValue( String("pitchStep") );
     }
-    
+
     if ( prop.containsKey( String("sysexIn") ) ) {
         sysexComm.setInput( prop.getValue("sysexIn") );
     }
-    
+
     if ( prop.containsKey( String("sysexOut") ) ) {
         sysexComm.setOutput( prop.getValue("sysexOut") );
     }
-    
+
     if ( prop.containsKey( String("sysexChl") ) ) {
         sysexComm.setChl( prop.getIntValue( String("sysexChl") ) );
     }
-    
+
     if ( prop.containsKey( String("engineType") ) ) {
         setEngineType(prop.getIntValue(String("engineType")));
     }
@@ -769,19 +773,19 @@ void DexedAudioProcessor::loadPreference() {
     if ( prop.containsKey( String("wheelMod") ) ) {
         controllers.wheel.parseConfig(prop.getValue(String("wheelMod")).toRawUTF8());
     }
-    
+
     if ( prop.containsKey( String("footMod") ) ) {
         controllers.foot.parseConfig(prop.getValue(String("footMod")).toRawUTF8());
     }
-    
+
     if ( prop.containsKey( String("breathMod") ) ) {
         controllers.breath.parseConfig(prop.getValue(String("breathMod")).toRawUTF8());
     }
-    
+
     if ( prop.containsKey( String("aftertouchMod") ) ) {
         controllers.at.parseConfig(prop.getValue(String("aftertouchMod")).toRawUTF8());
     }
-    
+
     controllers.refresh();
 }
 
@@ -789,15 +793,15 @@ void DexedAudioProcessor::savePreference() {
     File propFile = DexedAudioProcessor::dexedAppDir.getChildFile("Dexed.xml");
     PropertiesFile::Options prefOptions;
     PropertiesFile prop(propFile, prefOptions);
-    
+
     prop.setValue(String("normalizeDxVelocity"), normalizeDxVelocity);
     prop.setValue(String("pitchRange"), controllers.values_[kControllerPitchRange]);
     prop.setValue(String("pitchStep"), controllers.values_[kControllerPitchStep]);
-    
+
     prop.setValue(String("sysexIn"), sysexComm.getInput());
     prop.setValue(String("sysexOut"), sysexComm.getOutput());
     prop.setValue(String("sysexChl"), sysexComm.getChl());
-    
+
     prop.setValue(String("showKeyboard"), showKeyboard);
 
     char mod_cfg[15];
@@ -809,9 +813,8 @@ void DexedAudioProcessor::savePreference() {
     prop.setValue(String("breathMod"), mod_cfg);
     controllers.at.setConfig(mod_cfg);
     prop.setValue(String("aftertouchMod"), mod_cfg);
-    
+
     prop.setValue(String("engineType"), (int) engineType);
-    
+
     prop.save();
 }
-
